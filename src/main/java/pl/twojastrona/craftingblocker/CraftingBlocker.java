@@ -1,4 +1,4 @@
-package pl.twojastrona.craftingblocker;
+package pl.example.craftingblocker;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

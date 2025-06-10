@@ -53,8 +53,8 @@ public class CraftingBlocker extends JavaPlugin implements Listener {
     public void onInventoryOpen(InventoryOpenEvent event) {
         if (event.getPlayer() instanceof Player) {
             Player player = (Player) event.getPlayer();
-            // Sprawdzamy czy gracz otwiera swój ekwipunek
-            if (event.getInventory().equals(player.getInventory())) {
+            // Sprawdzamy czy gracz otwiera swój ekwipunek (typ PLAYER)
+            if (event.getInventory().getType().toString().equals("PLAYER")) {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
@@ -69,8 +69,8 @@ public class CraftingBlocker extends JavaPlugin implements Listener {
     public void onInventoryClose(InventoryCloseEvent event) {
         if (event.getPlayer() instanceof Player) {
             Player player = (Player) event.getPlayer();
-            // Sprawdzamy czy gracz zamyka swój ekwipunek
-            if (event.getInventory().equals(player.getInventory())) {
+            // Sprawdzamy czy gracz zamyka swój ekwipunek (typ PLAYER)
+            if (event.getInventory().getType().toString().equals("PLAYER")) {
                 removeCraftingBlockers(player);
             }
         }
@@ -81,12 +81,12 @@ public class CraftingBlocker extends JavaPlugin implements Listener {
         if (event.getWhoClicked() instanceof Player) {
             Player player = (Player) event.getWhoClicked();
             
-            // Sprawdzamy czy to kliknięcie w ekwipunku gracza
-            if (event.getInventory().equals(player.getInventory())) {
+            // Sprawdzamy czy to kliknięcie w ekwipunku gracza (typ PLAYER)
+            if (event.getInventory().getType().toString().equals("PLAYER")) {
                 int slot = event.getRawSlot();
                 
-                // Sloty craftingu to 5, 6, 7, 8 w ekwipunku gracza (2x2 crafting grid)
-                if (slot >= 5 && slot <= 8) {
+                // Sloty craftingu to 1, 2, 3, 4 w ekwipunku gracza
+                if (slot >= 1 && slot <= 4) {
                     ItemStack clickedItem = event.getCurrentItem();
                     
                     // Sprawdzamy czy to nasz bloker
@@ -97,13 +97,13 @@ public class CraftingBlocker extends JavaPlugin implements Listener {
                     }
                 }
                 
-                // Blokujemy shift+click do pól craftingu (sprawdzamy wszystkie sloty ekwipunku)
+                // Blokujemy shift+click do pól craftingu
                 if (event.isShiftClick() && event.getRawSlot() >= 9) {
-                    for (int i = 5; i <= 8; i++) {
+                    for (int i = 1; i <= 4; i++) {
                         ItemStack item = player.getInventory().getItem(i);
-                        if (isBlockerItem(item)) {
+                        if (item == null || item.getType() == Material.AIR) {
                             event.setCancelled(true);
-                            player.sendMessage(ChatColor.RED + "Nie możesz przenosić przedmiotów - pola craftingu są zablokowane!");
+                            player.sendMessage(ChatColor.RED + "Nie możesz przenosić przedmiotów do pól craftingu!");
                             return;
                         }
                     }
@@ -113,32 +113,73 @@ public class CraftingBlocker extends JavaPlugin implements Listener {
     }
 
     private void setCraftingBlockers(Player player) {
-        // Ustawiamy blokery w slotach craftingu (5-8)
-        // Slot 5 = górny lewy, 6 = górny prawy, 7 = dolny lewy, 8 = dolny prawy
-        for (int i = 5; i <= 8; i++) {
+        // Ustawiamy blokery w slotach craftingu (1-4)
+        // Używamy różnych bloków jak w twoim Skript
+        ItemStack[] blockers = {
+            createBlockerItem(Material.NETHERRACK),
+            createBlockerItem(Material.STONE), 
+            createBlockerItem(Material.WOOD),
+            createBlockerItem(Material.COBBLESTONE)
+        };
+        
+        for (int i = 1; i <= 4; i++) {
             ItemStack currentItem = player.getInventory().getItem(i);
             if (currentItem == null || currentItem.getType() == Material.AIR) {
-                player.getInventory().setItem(i, blockerItem.clone());
+                player.getInventory().setItem(i, blockers[i-1]);
             }
         }
     }
+    
+    private ItemStack createBlockerItem(Material material) {
+        ItemStack item = new ItemStack(material, 1);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(ChatColor.RED + "Pole zablokowane");
+        item.setItemMeta(meta);
+        return item;
+    }
 
     private void removeCraftingBlockers(Player player) {
-        // Usuwamy blokery ze slotów craftingu (5-8)
-        for (int i = 5; i <= 8; i++) {
+        // Usuwamy blokery ze slotów craftingu (1-4)
+        Material[] blockerTypes = {Material.NETHERRACK, Material.STONE, Material.WOOD, Material.COBBLESTONE};
+        
+        for (int i = 1; i <= 4; i++) {
             ItemStack item = player.getInventory().getItem(i);
-            if (isBlockerItem(item)) {
+            if (isSpecificBlockerItem(item, blockerTypes[i-1])) {
                 player.getInventory().setItem(i, null);
             }
         }
     }
-
-    private boolean isBlockerItem(ItemStack item) {
-        if (item == null || item.getType() != Material.WOOL) {
+    
+    private boolean isSpecificBlockerItem(ItemStack item, Material expectedType) {
+        if (item == null || item.getType() != expectedType) {
             return false;
         }
         
-        if (item.getDurability() != 0) { // Sprawdzamy czy to biała wełna
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.hasDisplayName()) {
+            return false;
+        }
+        
+        return meta.getDisplayName().equals(ChatColor.RED + "Pole zablokowane");
+    }
+
+    private boolean isBlockerItem(ItemStack item) {
+        if (item == null) {
+            return false;
+        }
+        
+        // Sprawdzamy czy to jeden z naszych blokerów
+        Material[] blockerTypes = {Material.NETHERRACK, Material.STONE, Material.WOOD, Material.COBBLESTONE};
+        boolean isBlockerType = false;
+        
+        for (Material type : blockerTypes) {
+            if (item.getType() == type) {
+                isBlockerType = true;
+                break;
+            }
+        }
+        
+        if (!isBlockerType) {
             return false;
         }
         

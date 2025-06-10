@@ -1,6 +1,6 @@
 name: CraftingBlocker
 version: 1.0
-main: pl.twojastrona.craftingblocker.CraftingBlocker
+main: com.example.craftingblocker.CraftingBlocker
 api-version: 1.8
 author: Uzierek
 description: Plugin blokujący pola craftingu w ekwipunku gracza

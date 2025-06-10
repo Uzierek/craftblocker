@@ -1,4 +1,4 @@
-package pl.example.craftingblocker;
+package com.example.craftingblocker;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

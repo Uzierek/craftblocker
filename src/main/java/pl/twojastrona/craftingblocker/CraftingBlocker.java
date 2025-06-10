@@ -85,8 +85,8 @@ public class CraftingBlocker extends JavaPlugin implements Listener {
             if (event.getInventory().equals(player.getInventory())) {
                 int slot = event.getRawSlot();
                 
-                // Sloty craftingu to 1, 2, 3, 4 w ekwipunku gracza
-                if (slot >= 1 && slot <= 4) {
+                // Sloty craftingu to 5, 6, 7, 8 w ekwipunku gracza (2x2 crafting grid)
+                if (slot >= 5 && slot <= 8) {
                     ItemStack clickedItem = event.getCurrentItem();
                     
                     // Sprawdzamy czy to nasz bloker
@@ -97,9 +97,9 @@ public class CraftingBlocker extends JavaPlugin implements Listener {
                     }
                 }
                 
-                // Blokujemy shift+click do pól craftingu
+                // Blokujemy shift+click do pól craftingu (sprawdzamy wszystkie sloty ekwipunku)
                 if (event.isShiftClick() && event.getRawSlot() >= 9) {
-                    for (int i = 1; i <= 4; i++) {
+                    for (int i = 5; i <= 8; i++) {
                         ItemStack item = player.getInventory().getItem(i);
                         if (isBlockerItem(item)) {
                             event.setCancelled(true);
@@ -113,8 +113,9 @@ public class CraftingBlocker extends JavaPlugin implements Listener {
     }
 
     private void setCraftingBlockers(Player player) {
-        // Ustawiamy blokery w slotach craftingu (1-4)
-        for (int i = 1; i <= 4; i++) {
+        // Ustawiamy blokery w slotach craftingu (5-8)
+        // Slot 5 = górny lewy, 6 = górny prawy, 7 = dolny lewy, 8 = dolny prawy
+        for (int i = 5; i <= 8; i++) {
             ItemStack currentItem = player.getInventory().getItem(i);
             if (currentItem == null || currentItem.getType() == Material.AIR) {
                 player.getInventory().setItem(i, blockerItem.clone());
@@ -123,8 +124,8 @@ public class CraftingBlocker extends JavaPlugin implements Listener {
     }
 
     private void removeCraftingBlockers(Player player) {
-        // Usuwamy blokery ze slotów craftingu (1-4)
-        for (int i = 1; i <= 4; i++) {
+        // Usuwamy blokery ze slotów craftingu (5-8)
+        for (int i = 5; i <= 8; i++) {
             ItemStack item = player.getInventory().getItem(i);
             if (isBlockerItem(item)) {
                 player.getInventory().setItem(i, null);
